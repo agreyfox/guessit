@@ -2,7 +2,7 @@ var express = require('express');
 var app = express();
 var fs = require("fs");
 var guessit = require('./guessit');
-var guessData = require('./data.js');
+var guessData = require('./data');
 var http = require('http');
 
 
@@ -99,58 +99,83 @@ if (cmds[2] == "data") {
     var i = guessit.getCurrentContract(cmds[3]).then(function (result) {
         console.log(result);
     });
-    //guessit.getCurrentContract("2019-01-15");
-} else if (cmds[2] == "openNewPredict") {
-    // cmd[3] 时间, cmd[4],name, cmd[5],target
-    var savetodb = function () {
-        var newPredictEvent = guessit.mgrInstance.Newone({}, {
-            //fromBlock: 0,
-            toBlock: 'latest'
-        });
-        var waiting = true;
-        newPredictEvent.watch(function (err, result) {
-            if (!err) {
-                console.log("One Predict contract was created at ");
-                console.log(result.args);
-                console.log("Now saving to db");
-                guessData.setContract(cmds[3], cmds[4], cmds[5], result.args.url);
-                newPredictEvent.stopWatching();
-            } else {
-                console.log("get new one event, continue...")
-            }
-        });
-    }
-    var hash = guessit.open(cmds[4], cmds[5], savetodb);
-
 } else if (cmds[2] == "make") {
     guessData.createMarketDay(cmds[3], Number(cmds[4]));
 } else if (cmds[2] == 'guess') {
     console.log("tests.js 上证0923 4.0");
-    var h = guessit.guessByHand( cmds[3],cmds[4],guessit.mainAccount, guessit.mainKey);
+    var h = guessit.guessByHand(cmds[3], cmds[4], guessit.mainAccount, guessit.mainKey);
     // console.log("ersult is " + h);
 
 } else if (cmds[2] == 'total') {
-    console.log(guessit.getTotalOfDay("0x09a200b554b5cc2fad99bed324f840b3223d469f"));
-    guessit.getResultOfDay("0x09a200b554b5cc2fad99bed324f840b3223d469f");
+    //console.log(guessit.getTotalOfDay("0x09a200b554b5cc2fad99bed324f840b3223d469f"));
+    //guessit.getResultOfDay("0x09a200b554b5cc2fad99bed324f840b3223d469f");
     console.log(guessit.chain3.toDecimal(guessit.chain3.toHex(guessit.chain3.mc.getBalance(guessit.testAccount))));
+    console.log(guessit.getBalance());
+    var mm = async function () {
+        var mm = await guessit.getPoolSize();
+    }
+    mm().then(function (result) {
+        console.log(result);
+    });
 } else if (cmds[2] == "current") {
     console.log("here is current bid contract");
-   guessit.getAvaiableBid(function(e){
-       console.log(e);
-   });
-   /*
-    for(var i=0;i<1000;i++){
-        guessData.getOpenDay((new Date()).valueOf(),function(){console.log(i.toString()+"done")});
-        http.request('http://127.0.0.1:11545/ava',function(err,resp){
-            console.log(resp.body);
-            resp.end();
-            this.end();
-        });
-    }*/
+    guessit.getAvaiableBid(function (e) {
+        console.log(e);
+    });
+    /*
+     for(var i=0;i<1000;i++){
+         guessData.getOpenDay((new Date()).valueOf(),function(){console.log(i.toString()+"done")});
+         http.request('http://127.0.0.1:11545/ava',function(err,resp){
+             console.log(resp.body);
+             resp.end();
+             this.end();
+         });
+     }*/
     //console.log(h);
 
-}else if (cmds[2] == 'result'){
+} else if (cmds[2] == 'result') {
     guessit.getPredictResult(cmds[3]);
-}else if (cmds[2] == 'send'){
-    guessit.initialAccount(cmds[3],0.01);
+} else if (cmds[2] == 'send') {
+    guessit.initialAccount(cmds[3], cmds[4]);
+} else if (cmds[2] == 'getall') {
+    guessit.getDailyContractName(cmds[3]);
+    guessit.getPredictAll(cmds[3]);
+} else if (cmds[2] == 'mainevent') {
+    guessit.getMainContractEvent();
+} else if (cmds[2] == "owner") {
+    console.log("main contract is")
+    guessit.getMainContractOwner();
+    console.log("----------EVENT--------")
+    guessit.getPassEventFilter();
+} else if (cmds[2] == 'pool') {
+    console.log(guessit.getPoolSize());
+} else if (cmds[2] == 'bonus') {
+    guessit.sendBonus(cmds[3], cmds[4]);
+} else if (cmds[2] == 'profile') {
+    guessData.generateUserProfile(cmds[3], function (data) {
+        console.log(data);
+    });
+} else if (cmds[2] == 'board') {
+    guessData.generateUserBillBorad(function (d) {
+        console.log(d);
+    });
+} else if (cmds[2] == 'history') {
+    guessData.getHistory(function (d) {
+        console.log(d);
+    });
+} else if (cmds[2] == 'bingo') {
+    guessData.isBingo(cmds[3], cmds[4], function (e) {
+        console.log(e);
+    })
+
+} else if (cmds[2] == 'lastwinner') {
+    guessData.getLatestWinner(function (e) {
+        console.log(e);
+    })
+
+} else if (cmds[2] == 'winner') {
+    guessData.getWinners("no", function (e) {
+        console.log(e);
+    })
+
 }

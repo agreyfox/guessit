@@ -6,19 +6,25 @@ var guessit = require('./guessit');
 var guessData = require(
     './data.js'
 )
-
-
-var cmds = process.argv;
+cmds = process.argv;
 if (cmds != null && cmds.length >= 3) {
     var file = cmds[2];
 } else {
     console.log("Input should have contract file and contract name:\neg: node create.js create/abi");
     return;
 }
+if (cmds[2] == "help") {
+    console.log("create.js deploy 编译并创建主合约");
+
+    console.log("create.js new 日期 合约名 类型，　创建某日合约,日期类型为2018-10-01");
+    console.log("create.js abi , 显示合约ＡＢＩ信息");
+    console.log("create.js deploy 编译并创建主合约");
+    return;
+}
 if (cmds[2] == "create") { // create 日期合约名, 2019-09-09 
     create(cmds[3], cmds[4]);
-} else if (cmds[2] == "new") {
-    createPredictContratByDate(cmds[3], cmds[4]);
+} else if (cmds[2] == "new") { //to 开启新一日竞猜合约．调用方式，node create.js new 合约名　类型
+    createPredictContratByDate(cmds[3], cmds[4], cmds[5]);
 } else if (cmds[2] == "abi") {
     var input = {
         'guessit.sol': fs.readFileSync('./guessit.sol', 'utf8'),
@@ -37,11 +43,13 @@ if (cmds[2] == "create") { // create 日期合约名, 2019-09-09
     console.log("Predict abi");
     console.log(output.contracts['guessit.sol:Predict'].interface);
 } else if (cmds[2] == "deploy") {
-    deployPredictContract();
+    deployGuessitContract();
+} else if (cmds[2] == "daily") {
+    deployDailyPredictContract();
 }
 
 // ==============================Following is function.
-function create(name, datedata) {
+/*function create(name, datedata) {
     var input = {
         'guessit.sol': fs.readFileSync('./guessit.sol', 'utf8'),
         // 'predict.sol': fs.readFileSync('./predict.sol', 'utf8')
@@ -79,8 +87,10 @@ function create(name, datedata) {
 
     createContract(gasEstimate, bytecode);
 }
+*/
 
-function deployPredictContract() {
+//创建主合约
+function deployGuessitContract() {
     var input = {
         'guessit.sol': fs.readFileSync('./guessit.sol', 'utf8'),
         // 'predict.sol': fs.readFileSync('./predict.sol', 'utf8')
@@ -89,15 +99,15 @@ function deployPredictContract() {
     var output = solc.compile({
         sources: input
     }, 1);
-
-    // console.log('contracts', Object.keys(output.contracts));
+    console.log(output.errors);
+    //console.log('contracts', Object.keys(output.contracts));
 
     var key = Object.keys(output.contracts);
     // console.log(key);
-    console.log("We user 'guessit.sol:Predict' ");
+    console.log("We user 'guessit.sol:Guessit' ");
     //this is the 
     // console.log("key:", key);
-    var ctt = output.contracts['guessit.sol:Predict'];
+    var ctt = output.contracts['guessit.sol:Guessit'];
 
     if (ctt == null) {
         console.log("Contract CTT is empty1");
@@ -116,8 +126,47 @@ function deployPredictContract() {
     });
     console.log("Gas Estimate on contract:", gasEstimate);
 
-    createContract(gasEstimate, bytecode);
+    createContract(90000000, bytecode);
 
+}
+//创建主合约
+function deployDailyPredictContract() {
+    var input = {
+        'guessit.sol': fs.readFileSync('./guessit.sol', 'utf8'),
+        // 'predict.sol': fs.readFileSync('./predict.sol', 'utf8')
+    };
+
+    var output = solc.compile({
+        sources: input
+    }, 1);
+    console.log(output.errors);
+    //console.log('contracts', Object.keys(output.contracts));
+
+    var key = Object.keys(output.contracts);
+    // console.log(key);
+    console.log("We user 'guessit.sol:Predict' ");
+    //this is the 
+    // console.log("key:", key);
+    var ctt = output.contracts['guessit.sol:Predict'];
+
+    if (ctt == null) {
+        console.log("Contract Predict CTT is empty1");
+        return;
+    }
+
+    var bytecode = "0x" + ctt.bytecode;
+
+    var abi = JSON.parse(ctt.interface);
+
+    console.log('abi:', ctt.interface);
+
+
+    let gasEstimate = guessit.chain3.mc.estimateGas({
+        data: bytecode
+    });
+    console.log("Gas Estimate on contract:", gasEstimate);
+
+    createContract(gasEstimate, bytecode);
 
 }
 
@@ -134,7 +183,7 @@ function createContract(gasValue, inByteCode) {
     var rawTx = {
         from: guessit.mainAccount,
         nonce: guessit.chain3.intToHex(txcount),
-        gasPrice: guessit.chain3.intToHex(250000000000), //chain3.intToHex(chain3.mc.gasPrice),//
+        gasPrice: guessit.chain3.intToHex(40000000000), //chain3.intToHex(chain3.mc.gasPrice),//
         gasLimit: guessit.chain3.intToHex(9000000), //chain3.intToHex(gasValue),
         to: '0x',
         value: '0x',
@@ -142,7 +191,6 @@ function createContract(gasValue, inByteCode) {
         shardingFlag: 0, //default is global contract
         chainId: guessit.chain3.version.network
     }
-
     var cmd1 = guessit.chain3.signTransaction(rawTx, guessit.mainKey);
 
     //console.log(cmd1);
@@ -157,6 +205,9 @@ function createContract(gasValue, inByteCode) {
                     filter.stopWatching();
                     console.log(result);
                     console.log(receipt);
+                    console.log("Recipt end=====================");
+                    var trasactionlog = guessit.chain3.mc.getTransaction(hash);
+                    console.log(trasactionlog);
                     return hash;
                 } else {
                     console.log("error or no receipt");
@@ -164,7 +215,6 @@ function createContract(gasValue, inByteCode) {
             });
         } else {
             console.log("Chain3 error:", err.message);
-
             return err.message;
         }
     });
@@ -190,39 +240,20 @@ function listenNewone() {
     });
 }
 
-async function createPredictContratByDate(name, dat) {
+async function createPredictContratByDate(dat, name, target) {
     var dbdata = null;
     var mm = new Date(dat).valueOf();
-    console.log("start to create new contract for " + dat + " with name: " + name)
-    dbdata = await guessData.getOpenDay(mm, function (result) {
-        dbdata = result;
-
-        if (!result.created) {
-            var hash = guessit.open(name, function (err, result) {
-                console.log(err);
-                console.log(result);
-
-                var newPredictEvent = guessit.mgrInstance.Newone({}, {
-                    //fromBlock: 0,
-                    toBlock: 'latest'
-                });
-
-                newPredictEvent.watch(function (err, res) {
-                    if (!err) {
-                        console.log(" predict contract create at ");
-                        console.log(res.args);
-                        guessData.setContract(mm, res.args.url);
-                        newPredictEvent.stopWatching();
-                        //return result.args.address;
-                    } else {
-                        console.log("get new one event, continue...")
-                    }
-                });
-            });
-        } else {
-            console.log("the contract is already there:");
+    console.log("start to create new contract for " + dat + " with name: " + name);
+    var ok = await guessData.createOneMarketRecord({
+        date: dat,
+        name: name,
+        target: target
+    });
+    console.log(ok);
+    if (ok) {
+        var hash = guessit.creatDailyContract(name, target, function (err, result) {
             console.log(result);
-        }
-    })
+        });
+    }
 
 }
