@@ -491,14 +491,16 @@ app.post("/play", function (req, res) {
        keypair[0],
        keypair[1]
        );*/
-    guessit.guessNow(si.point, keypair[0], keypair[1]);
-    res.end(
-      JSON.stringify({
-        result: "ok",
-        msg: "提交成功，请过几分钟刷新区块部分查看提交结果！"
-      })
-    );
-    return;
+    guessit.guessNow(si.point, keypair[0], keypair[1], function (data) {
+      res.end(
+        JSON.stringify({
+          result: data.result,
+          msg: data.msg
+          //"提交成功，请过几分钟刷新区块部分查看提交结果！"
+        })
+      );
+    });
+
   } catch (e) {
     log.error("input number is error", e);
     res.end(

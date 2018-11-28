@@ -184,7 +184,7 @@ function startc(abc, index) {
         fromBlock: 0,
         toBlock: 'latest'
     });
-    var saveGuessResult = function (value) { // to save user input when get return from block chian
+    var saveGuessResult = async function (value) { // to save user input when get return from block chian
         try {
             var blockNumber = value.blockNumber;
             //console.log(chain3.toDecimal(value.args.point) / factor);
@@ -207,7 +207,7 @@ function startc(abc, index) {
                 var n = new Date();
                 targetContracts[index].total++;
                 log.info("information came in:", result.args);
-                log.debug(result);
+                //log.debug(result);
                 var transaction = await guessit.chain3.mc.getBlock(result.blockNumber);
                 result.timestamp = transaction.timestamp;
                 log.debug(result);
@@ -243,7 +243,7 @@ async function findWorkItem(n) {
     var currenttime = new Date();
     // var targetdat = currenttime.addDays(n);
     var item;
-    for (var i = -3; i < n + 1; i++) {
+    for (var i = -1; i < n + 1; i++) {
         var targetdat = currenttime.addDays(i);
         log.info('try to find:', targetdat);
         await guessData.getDayItem(targetdat).then(function (ret) {

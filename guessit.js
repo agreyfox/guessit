@@ -9,18 +9,12 @@ var GuessData = require(
 )
 var log4js = require('log4js');
 
-/*log4js.configure({
-    appenders: { 
-        'out': { type: 'stdout', layout: { type: 'basic' } } ,
-        'file':{type:'file',filename:"guessit.log"}
-    },
-    categories: { default: { appenders: ['out','file'], level: 'info' } }
-  });*/
 var log = log4js.getLogger("guessit");
 log.level = 'debug';
 
 var address_back = '0xa8dfd46d7eef2d7338ae0ba5adfd47f213f0555f';
-var address = '0xa1b44dca806352aaa33c236fe481b9990fe9f175';
+var address_testnet = '0xa1b44dca806352aaa33c236fe481b9990fe9f175';
+var address = "0xb5f3e36e39f35af68eed71b3f4dee002e9c3bfdf";
 var address_rockback = '0xcfcfe814d5600f48d4ba55101dee548da7b457df';
 var address_main = '0xf4c88270a93189ceb9d7ad78a9c69653ad82b41c';
 //var tokenabi =[{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"targets","outputs":[{"name":"name","type":"bytes32"},{"name":"voteCount","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"guessToday","outputs":[{"name":"weight","type":"uint256"},{"name":"guessed","type":"bool"},{"name":"vote","type":"string"},{"name":"target","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"getBalance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"chairperson","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"doBonus","outputs":[{"name":"ok","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_receiver","type":"address"}],"name":"send","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[{"name":"etherreceiver","type":"address"},{"name":"amount","type":"uint256"}],"name":"fundtransfer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"proposal","type":"uint256"},{"name":"dian","type":"uint256"}],"name":"guess","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"oneDayBillBoard","outputs":[{"name":"Predictor","type":"address"},{"name":"count","type":"uint256"},{"name":"bonus","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"guessArrayToday","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"balance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"user","type":"address"},{"name":"count","type":"uint256"},{"name":"bonus","type":"uint256"}],"name":"update","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getTodayPredicts","outputs":[{"name":"numberof_","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"v","type":"uint256"}],"name":"uintToString","outputs":[{"name":"str","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_from","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"fillpool","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_from","type":"address"},{"indexed":false,"name":"_id","type":"uint256"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"OneShot","type":"event"}];
@@ -317,8 +311,10 @@ var guessitContract = chain3.mc.contract([{
     "name": "Newone",
     "type": "event"
 }]);
-var me = "0xa108c1686610c9b6ab8d34d44d8c6902cc153e87";
-var me_key = "89f5db3b621bd19c94593c39a8f3f46a2a7811ecf45a1bb398b7e308324dcfc8";
+var me_test = "0xa108c1686610c9b6ab8d34d44d8c6902cc153e87";
+var me_key_test = "89f5db3b621bd19c94593c39a8f3f46a2a7811ecf45a1bb398b7e308324dcfc8";
+var me = "0xd83e38012e72acf00a7c73131180e00fd6a91183";
+var me_key = "0x24fc8c5a83df2f1fb5f8c18d5a5f33a8631a9bfa994cf78cb19656f5e24ce799";
 var sender = "0x75041efc0fb09911cb33224e8c0b3f63575e89be";
 var sendkey = "415b86d531187460b0e171eda67a791a2330e466c2b97c3978ad10520d20a758";
 var thirdaddr = "0x4322af66176691860a440d38074e35c26f75DAa8";
@@ -329,9 +325,10 @@ var pooladdr = "0x13804A39B0Cf6c40FaABEbF7601d385d56F87a38";
 var poolkey = "f28a848b1ae77df561c3314d3eec48d142a45ef452f1c2267ea0d8a4407166e8";
 var address_old = "0x6672007decb447992fde88de6016c2b53317d90a";
 var factor = Math.pow(10, 5);
-var gLIMIT = 230000;
+var gLIMIT = 150000;
 var gPRICE = 20000000000;
 var Debug = 1;
+var MOAC_URL = 'http://127.0.0.1:8545';
 pabi = [{
     "constant": true,
     "inputs": [],
@@ -604,7 +601,7 @@ pabi = [{
     "name": "log",
     "type": "event"
 }];
-chain3.setProvider(new chain3.providers.HttpProvider('http://127.0.0.1:8545'));
+chain3.setProvider(new chain3.providers.HttpProvider(MOAC_URL));
 var predictContract = chain3.mc.contract(pabi);
 var guessitContractInstance = guessitContract.at(address);
 
@@ -651,7 +648,7 @@ async function getPoolSize() {
             } else {
                 log.error("Server RPC not connected,reconnect...");
                 try {
-                    chain3.setProvider(new chain3.providers.HttpProvider('http://127.0.0.1:8545'));
+                    chain3.setProvider(new chain3.providers.HttpProvider(MOAC_URL));
                     let m = await chain3.mc.getBalance(address);
                     resolve(chain3.toDecimal(chain3.toHex(m)));
                 } catch (e) {
@@ -669,7 +666,7 @@ async function getPoolSize() {
 
 async function getBalance(accountaddress, mother) {
 
-    chain3.setProvider(new chain3.providers.HttpProvider('http://127.0.0.1:8545'));
+    chain3.setProvider(new chain3.providers.HttpProvider(MOAC_URL));
     if (chain3.isConnected()) {
         //Load the contract ABI
         NID = chain3.version.network;
@@ -686,7 +683,7 @@ async function getBalance(accountaddress, mother) {
 }
 //old version 
 function sendBonus_old(addr, amount) {
-    chain3.setProvider(new chain3.providers.HttpProvider('http://127.0.0.1:8545'));
+    chain3.setProvider(new chain3.providers.HttpProvider(MOAC_URL));
     if (chain3.isConnected()) {
         //Load the contract ABI
         NID = chain3.version.network;
@@ -714,7 +711,7 @@ function sendBonus_old(addr, amount) {
 }
 //new send moac from poolkey
 async function sendBonus(addr, amount) {
-    chain3.setProvider(new chain3.providers.HttpProvider('http://127.0.0.1:8545'));
+    chain3.setProvider(new chain3.providers.HttpProvider(MOAC_URL));
     if (chain3.isConnected()) {
         var guessitsing = [0x67, 0x75, 0x65, 0x73, 0x73, 0x69, 0x74, 0x62, 0x6f, 0x6e, 0x75, 0x73];
         //Load the contract ABI
@@ -861,7 +858,7 @@ function numToBytes32(bignum) {
 // 合约地址addr, 合约的类型target,预测的点数point,回调函数cb,
 //发送者senderaddr,发送者的key,缺省为主合约
 //cb中用于处理获得的结果
-async function guess(addr, point, cb, senderaddr = me, senderkey = me_key) {
+async function guess(addr, point, cb, senderaddr = me, senderkey = me_key, callback) {
     log.debug("XXXX guess at :", addr);
     log.debug("to contract:", )
     let predictInstance = predictContract.at(addr);
@@ -902,9 +899,9 @@ async function guess(addr, point, cb, senderaddr = me, senderkey = me_key) {
         log.debug("gas price is ");
         log.debug(gasPrice);
         log.debug(gasEstimate * gasPrice);
-        log.debug(leftmoney);
+        log.debug("left money", leftmoney / Math.pow(10, 18));
         var enough = gasEstimate * gasPrice < leftmoney;
-        if (true) {
+        if (leftmoney / Math.pow(10, 18) > 0.002) {
             //if (gasEstimate < gLIMIT) {
             gasEstimate = gLIMIT; //for speed up the 
             //}
@@ -935,6 +932,10 @@ async function guess(addr, point, cb, senderaddr = me, senderkey = me_key) {
                     chain3.mc.sendRawTransaction(cmd1, function (err, hash) {
                         if (!err) {
                             log.debug("send contract raw command at: " + hash);
+                            callback({
+                                result: "ok",
+                                msg: hash
+                            }); //返回ｔｘ
                             var filter = chain3.mc.filter('latest');
                             try {
                                 if (showErr) {
@@ -968,6 +969,10 @@ async function guess(addr, point, cb, senderaddr = me, senderkey = me_key) {
                             }
                         } else {
                             log.error(err);
+                            callback({
+                                result: "no",
+                                msg: err.toString()
+                            });
                             reject(err);
                         }
                     });
@@ -981,6 +986,10 @@ async function guess(addr, point, cb, senderaddr = me, senderkey = me_key) {
             return true;
         } else {
             log.error("no money to submit");
+            callback({
+                result: "no",
+                msg: "No money"
+            });
             return false; //no money
         }
     }
@@ -1370,12 +1379,12 @@ Date.prototype.yyyymmdd = function () {
 };
 
 //根据提交时间猜测
-async function guessNow(point, addr = me, key = me_key) {
+async function guessNow(point, addr = me, key = me_key, callback) {
     var currenttime = new Date();
     var hours = currenttime.getHours();
     var mins = currenttime.getMinutes();
     log.debug("User submit predict at " + currenttime.toString());
-    log.debug(hours);
+    //log.debug(hours);
 
     // console.log(currenttime);
     var contract;
@@ -1413,7 +1422,7 @@ async function guessNow(point, addr = me, key = me_key) {
             }
         });
     }
-    if (hours > 15 && hours <= 23) { //15点后面提交都是到下一个交易日
+    if (hours >= 15 && hours <= 23) { //15点后面提交都是到下一个交易日
         //获取下一个交易日的
         log.debug(addr + "提交明天!");
         GuessData.getNextTradeDayContract(currenttime.valueOf(), true, function (e) {
@@ -1421,8 +1430,9 @@ async function guessNow(point, addr = me, key = me_key) {
             var item = e[0]; //取最前面的开头的部分
             if (e != null) {
                 if (item.created) {
+                    log.debug("user try to submit:", item);
                     contract = item.contract;
-                    guess(contract, point, startc, addr, key);
+                    guess(contract, point, startc, addr, key, callback);
 
                 } else {
                     log.debug("没有找到合适合约");
@@ -1441,7 +1451,7 @@ async function guessNow(point, addr = me, key = me_key) {
                 if (item.created) {
 
                     contract = item.contract;
-                    guess(contract, point, startc, addr, key);
+                    guess(contract, point, startc, addr, key, callback);
 
                 } else {
                     log.debug("没有找到合适合约");
@@ -1461,8 +1471,7 @@ async function guessNow(point, addr = me, key = me_key) {
                 if (item.created) {
                     log.debug(item);
                     contract = item.contract;
-                    guess(contract, point, startc, addr, key);
-
+                    guess(contract, point, startc, addr, key, callback);
                 } else {
                     log.debug("没有找到合适合约");
                     return false;

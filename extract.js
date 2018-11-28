@@ -293,6 +293,9 @@ async function dailyComputeJob() {
         });
 }
 
+function updateDailyContract() {
+
+}
 //=========================cmd process =========================================
 var cmds = process.argv;
 //console.log(cmds);

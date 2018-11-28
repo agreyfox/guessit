@@ -13,26 +13,6 @@ var Guessit = require("./guessit.js");
 
 var log4js = require("log4js");
 
-/*log4js.configure({
-    appenders: {
-        'out': {
-            type: 'stdout',
-            layout: {
-                type: 'basic'
-            }
-        },
-        'file': {
-            type: 'file',
-            filename: "data.log"
-        }
-    },
-    categories: {
-        default: {
-            appenders: ['out', 'file'],
-            level: 'debug'
-        }
-    }
-});*/
 var log = log4js.getLogger("Data");
 log.level = "debug";
 
@@ -728,8 +708,14 @@ module.exports = {
                 w: 1
               },
               function (err, result) {
-                assert.equal(null, err);
-                resolve(result);
+                //assert.equal(null, err);
+                if (!err) {
+                  log.debug(result);
+                  resolve(result);
+                } else {
+                  log.error(err);
+                  resolve(false);
+                }
               }
             );
           } catch (e) {
@@ -931,7 +917,8 @@ module.exports = {
               ready: false
             }
           };
-          db.collection(Records).findOneAndReplace({
+          db.collection(Records).findOneAndUpdate({
+              //need to update not replace
               tradeday: nextAvailabaleDay.yyyymmdd()
             },
             initialRecord, {
@@ -1117,9 +1104,6 @@ module.exports = {
           //log.debug(dayinfo.yyyymmdd());
           db.collection(UserBonus)
             .aggregate([{
-                $limit: 50
-              },
-              {
                 $group: {
                   _id: "$addr",
                   totalbonus: {
@@ -1138,6 +1122,9 @@ module.exports = {
                     $gt: 0
                   }
                 } //获得过奖金的
+              },
+              {
+                $limit: 50
               }
             ])
             .toArray(function (err, result) {
@@ -1412,50 +1399,62 @@ module.exports = {
       var updateSignScore = async function () {
         return new Promise(async (resolve, reject) => {
           try {
-            await db.collection(GuessLog).aggregate(
-                [{
-                    "$match": {
-                      'name': contractName,
-                      'archive': 0
-                    }
-                  },
-                  {
-                    "$project": {
-                      name: 1,
-                      addr: 1,
-                      timestamp: 1,
-                      _id: 0,
-                      point: 1,
-                    }
-                  },
-                  {
-                    "$addFields": {
-                      bonus: 0,
-                      score: BaseBonus,
-                      shindex: targetIndex,
-                      tradeday: mydate.yyyymmdd()
-                    }
-                  },
-                ])
+            await db
+              .collection(GuessLog)
+              .aggregate([{
+                  $match: {
+                    name: contractName,
+                    archive: 0
+                  }
+                },
+                {
+                  $project: {
+                    name: 1,
+                    addr: 1,
+                    timestamp: 1,
+                    _id: 0,
+                    point: 1
+                  }
+                },
+                {
+                  $addFields: {
+                    bonus: 0,
+                    score: BaseBonus,
+                    shindex: targetIndex,
+                    tradeday: mydate.yyyymmdd()
+                  }
+                }
+              ])
               .toArray(async function (err, data) {
-                log.debug('get the data ', data);
-                if (!err) { // no erro then start insert
+                log.debug("get the data ", data);
+                if (!err) {
+                  // no erro then start insert
                   try {
-                    var inclient = await MongoClient.connect(new Server("localhost", 27017));
+                    var inclient = await MongoClient.connect(
+                      new Server("localhost", 27017)
+                    );
                     const indb = inclient.db("guessit");
                     const col = indb.collection(UserBonus);
                     var bulk = col.initializeOrderedBulkOp();
-                    bulk.find({
-                      name: contractName
-                    }).delete();
+                    bulk
+                      .find({
+                        name: contractName
+                      })
+                      .delete();
+                    log.debug(
+                      "update base score , delete all with name ",
+                      contractName
+                    );
+                    log.debug("now add ", data.length, " record in to db");
                     for (var i = 0; i < data.length; i++) {
+                      //log.debug(data[i]);
                       bulk.insert(data[i], {
                         w: 1
                       });
                     }
                     await bulk.execute(function (err, data) {
-                      log.debug(err);
-                      log.debug('bulk write:', data);
+                      log.debug("error: ", err);
+                      log.debug("bulk write:", data);
                       inclient.close();
                       resolve(data);
                     });
@@ -1465,7 +1464,7 @@ module.exports = {
                     reject(e);
                   }
                 }
-              })
+              });
           } catch (e) {
             console.log(e);
             log.error(e);
@@ -1498,7 +1497,7 @@ module.exports = {
   caculate: async function (ti) {
     var mydate;
     var guessit = require("./guessit.js");
-    log.debug("Let start caculation.....")
+    log.debug("Let start caculation.....");
     try {
       mydate = new Date(parse(ti));
       //var yesterday = getPreTradDay(mydate);
@@ -1613,7 +1612,6 @@ module.exports = {
       var hitTotal = await getHitTotal();
       // update all record in guesslog to bonuslog
       log.debug("Total hit guess is ", hitTotal);
-
 
       //计算所有数据的分析数据
       var num_up, num_down;
@@ -1787,7 +1785,12 @@ module.exports = {
             //var batch = db.collection(UserBonus).initializeUnorderedBulkOp();
             for (var uindex = 0; uindex < billboard.length; uindex++) {
               if (billboard[uindex]) {
-                log.debug('update user ', billboard[uindex].addr, BaseBonus - uindex, uindex);
+                log.debug(
+                  "update user ",
+                  billboard[uindex].addr,
+                  BaseBonus - uindex,
+                  uindex
+                );
                 await updateOneUser(
                   billboard[uindex],
                   BaseBonus - uindex,
@@ -1796,7 +1799,6 @@ module.exports = {
                 log.debug("update one :", uindex);
               }
             }
-
           } catch (e) {
             console.log(e);
             log.error(e);
@@ -2342,7 +2344,6 @@ module.exports = {
       await update();
       log.debug("Update job:", dayinfo, total, totalhits);
       client.close();
-
     } catch (e) {
       console.log(e);
       log.error(e);
@@ -2370,11 +2371,11 @@ module.exports = {
                     }
                   }
                 }])
-                .limit(50) //最多５０位
                 .sort({
                   //totalbonus:-1,
                   totalscore: -1
                 })
+                .limit(50) //最多５０位
                 .toArray(function (err, result) {
                   log.debug(result);
                   if (result) {
@@ -2414,7 +2415,12 @@ module.exports = {
         // var nick = await findname(normoladdr);
         //log.debug(bill);
         for (var i = 0; i < bill.length; i++) {
-          var nick = await findname(bill[i]._id);
+          var nick;
+          if (bill[i]._id) {
+            nick = await findname(bill[i]._id);
+          } else {
+            nick = "";
+          }
           if (nick) {
             bill[i].nickname = encodeURI(nick.nickname);
           } else {
@@ -2566,7 +2572,7 @@ module.exports = {
       //log.debug("try to update the total number periodcally:", dayinfo);
       client = await MongoClient.connect(new Server("localhost", 27017));
       const db = client.db("guessit");
-      var dt = new Date(dayinfo);
+      /*var dt = new Date(dayinfo);
       dt = dt.addDays(-1); //前一天
       if (!isTradeDay(dt)) {
         dt = getPreTradeDay(dt); //如果今天不是交易日，获取下一个交易日的内容
@@ -2589,17 +2595,43 @@ module.exports = {
         log.debug("The daily contract not found!", dayinfo);
         throw "dailly 50 search error";
         //return;
-      }
+      }*/
       //获取分析表数据判断是否可以执行分析，字段ready为ｔｒｕｅ
       var total, bingo, totalbonus, scroe;
-      log.debug("found contrat with name:", content.name, dt);
+
+      var getLastBonusEntry = async function () {
+        return new Promise((resol, reje) => {
+          try {
+            db.collection(UserBonus)
+              .find({
+                // tranking: 1
+              })
+              .sort({
+                tradeday: -1
+              })
+              //.limit(1000)
+              .next(function (err, data) {
+                console.log("the last record is ", data);
+                resol(data);
+              });
+          } catch (e) {
+            console.log(e);
+            log.error(e);
+            reje(null);
+          }
+        });
+      };
+      var lastentry = await getLastBonusEntry();
+
+      log.debug("try to find latest bonus contract name ", lastentry.name);
+
       log.debug("get 50 user account information ....");
       var getUsers = async function () {
         return new Promise((resol, reje) => {
           try {
             db.collection(UserBonus)
               .find({
-                name: content.name,
+                name: lastentry.name,
                 tranking: {
                   $gt: 0
                 }
@@ -2630,14 +2662,11 @@ module.exports = {
       };
       var top50 = await getUsers();
       callback(top50);
-      log.debug("top50 result :", top50);
+      //log.debug("top50 result :", top50);
       client.close();
-
     } catch (e) {
       console.log(e);
       log.error(e);
-    } finally {
-      return (true);
-    }
+    } finally {}
   }
 }; //end of exports
